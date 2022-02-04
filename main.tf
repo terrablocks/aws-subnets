@@ -2,26 +2,24 @@ data "aws_vpc" "this" {
   id = var.vpc_id
 }
 
-locals {
-  vpc_cidr = var.cidr_block == "" ? data.aws_vpc.this.cidr_block : var.cidr_block
-  vpc_mask = element(split("/", local.vpc_cidr), 1)
+data "aws_internet_gateway" "this" {
+  filter {
+    name   = "attachment.vpc-id"
+    values = [data.aws_vpc.this.id]
+  }
 }
 
 resource "aws_subnet" "this" {
   # checkov:skip=CKV_AWS_130: Enabling public IP for subnet depends on user
-  count                   = length(var.azs)
+  for_each                = var.cidr_blocks
   vpc_id                  = data.aws_vpc.this.id
   map_public_ip_on_launch = var.map_public_ip
-  cidr_block = cidrsubnet(
-    local.vpc_cidr,
-    var.mask - local.vpc_mask,
-    count.index + var.subnet_index,
-  )
-  availability_zone = element(var.azs, count.index)
+  cidr_block              = each.value
+  availability_zone       = each.key
 
   tags = merge({
-    Name = var.subnet_name
-    Zone = element(var.azs, count.index)
+    Name = "${var.subnet_name}-${split("-", each.key)[2]}"
+    Zone = each.key
   }, var.tags)
 
   lifecycle {
@@ -39,10 +37,10 @@ resource "aws_route_table" "this" {
 }
 
 resource "aws_route" "igw" {
-  count                  = var.create_rtb && var.igw_id != "" ? 1 : 0
+  count                  = var.create_rtb && var.attach_igw ? 1 : 0
   route_table_id         = join(",", aws_route_table.this.*.id)
   destination_cidr_block = "0.0.0.0/0"
-  gateway_id             = var.igw_id
+  gateway_id             = data.aws_internet_gateway.this.internet_gateway_id
 }
 
 resource "aws_eip" "nat" {
@@ -67,14 +65,14 @@ resource "aws_route" "ngw" {
 }
 
 resource "aws_route_table_association" "this" {
-  count          = length(var.azs)
-  subnet_id      = aws_subnet.this[count.index].id
+  for_each       = var.cidr_blocks
+  subnet_id      = aws_subnet.this[each.key].id
   route_table_id = var.create_rtb ? join(",", aws_route_table.this.*.id) : var.rtb_id
 }
 
 resource "aws_network_acl" "this" {
   vpc_id     = data.aws_vpc.this.id
-  subnet_ids = aws_subnet.this.*.id
+  subnet_ids = [for _, v in aws_subnet.this : v.id]
 
   dynamic "ingress" {
     for_each = var.nacl_ingress_rules

@@ -1,10 +1,10 @@
 output "ids" {
-  value       = aws_subnet.this.*.id
+  value       = [for _, v in aws_subnet.this : v.id]
   description = "List of subnet ids"
 }
 
 output "cidrs" {
-  value       = aws_subnet.this.*.cidr_block
+  value       = [for _, v in aws_subnet.this : v.cidr_block]
   description = "List of subnet CIDR blocks"
 }
 
