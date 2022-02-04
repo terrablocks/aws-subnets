@@ -14,7 +14,7 @@ This terraform module will deploy the following services:
 module "vpc" {
   source = "github.com/terrablocks/aws-vpc.git"
 
-  network_name     = "dev"
+  network_name = "dev"
 }
 
 module "pub_subnet" {
@@ -56,8 +56,8 @@ module "protected_subnet" {
     ap-south-1b = "10.0.8.0/24"
     ap-south-1c = "10.0.9.0/24"
   }
-  subnet_name     = "protected-subnet"
-  rtb_name        = "protected-rtb"
+  subnet_name = "protected-subnet"
+  rtb_name    = "protected-rtb"
 }
 ```
 
