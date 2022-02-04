@@ -1,27 +1,19 @@
-variable "azs" {
-  type = list(string)
-  default = [
-    "us-east-1a",
-    "us-east-1b",
-  ]
-  description = "List of availability zones to be used for creating subnets"
-}
-
 variable "vpc_id" {
   type        = string
   description = "ID of VPC to associate resource with"
 }
 
-variable "cidr_block" {
-  type        = string
-  default     = ""
-  description = "VPC CIDR block to use as a base for assigning CIDR to subnet. Leave it blank to use the default CIDR block"
-}
-
-variable "subnet_index" {
-  type        = number
-  default     = 0
-  description = "Nth network within a CIDR to use as the starting point for subnet CIDR or count of existing subnets in VPC. 0 means no subnets exist within the VPC CIDR block"
+variable "cidr_blocks" {
+  type        = map(string)
+  default     = {}
+  description = <<-EOT
+    Map of availability zone and cidr block to assign
+    ```{
+      us-east-1a = "10.0.1.0/24"
+      us-east-1b = "10.0.2.0/24"
+      us-east-1c = "10.0.3.0/24"
+    }```
+  EOT
 }
 
 variable "subnet_name" {
@@ -34,12 +26,6 @@ variable "map_public_ip" {
   type        = bool
   default     = false
   description = "Automatically assign public ip to resources launched in this subnet"
-}
-
-variable "mask" {
-  type        = number
-  default     = 26
-  description = "Subnet mask to assign to subnet"
 }
 
 variable "create_rtb" {
@@ -60,10 +46,10 @@ variable "rtb_id" {
   description = "Existing route table to associate with subnet. **Note:** Required only if `create_rtb` is set to false"
 }
 
-variable "igw_id" {
-  type        = string
-  default     = ""
-  description = "Internet gateway id to assicate with route table"
+variable "attach_igw" {
+  type        = bool
+  default     = false
+  description = "Whether to attach internet gateway to the route table"
 }
 
 variable "create_nat" {
