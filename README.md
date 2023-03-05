@@ -81,6 +81,7 @@ module "protected_subnet" {
 | rtb_id | Existing route table to associate with subnet. **Note:** Required only if `create_rtb` is set to false | `string` | `""` | no |
 | attach_igw | Whether to attach internet gateway to the route table | `bool` | `false` | no |
 | create_nat | Whether to create NAT gateway for subnet and associate it to the route table | `bool` | `false` | no |
+| nat_eip_id | Allocation ID of existing EIP to attach to the NAT gateway. Leaving this blank will create a new EIP provided `create_nat` is set to true | `string` | `""` | no |
 | natgw_subnet_id | Subnet ID to place NAT gateway in. **Note:** Required if `create_nat` is set to true | `string` | `""` | no |
 | natgw_id | Existing NAT gateway to associate with route table | `string` | `null` | no |
 | nacl_ingress_rules | Numbered ingress rules for NACL | <pre>list(object({<br>    protocol   = string<br>    rule_no    = number<br>    action     = string<br>    cidr_block = string<br>    from_port  = number<br>    to_port    = number<br>  }))</pre> | <pre>[<br>  {<br>    "action": "allow",<br>    "cidr_block": "0.0.0.0/0",<br>    "from_port": 0,<br>    "protocol": "-1",<br>    "rule_no": 100,<br>    "to_port": 0<br>  }<br>]</pre> | no |

@@ -58,6 +58,12 @@ variable "create_nat" {
   description = "Whether to create NAT gateway for subnet and associate it to the route table"
 }
 
+variable "nat_eip_id" {
+  type        = string
+  default     = ""
+  description = "Allocation ID of existing EIP to attach to the NAT gateway. Leaving this blank will create a new EIP provided `create_nat` is set to true"
+}
+
 variable "natgw_subnet_id" {
   type        = string
   default     = ""

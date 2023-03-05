@@ -45,15 +45,15 @@ resource "aws_route" "igw" {
 
 resource "aws_eip" "nat" {
   # checkov:skip=CKV2_AWS_19: EIP is associated with NAT gateway
-  count = var.create_rtb && var.create_nat ? 1 : 0
+  count = var.create_nat && var.nat_eip_id == "" ? 1 : 0
   vpc   = true
   tags  = var.tags
 }
 
 resource "aws_nat_gateway" "this" {
-  count         = var.create_rtb && var.create_nat ? 1 : 0
+  count         = var.create_nat ? 1 : 0
   subnet_id     = var.natgw_subnet_id
-  allocation_id = join(", ", aws_eip.nat.*.id)
+  allocation_id = var.nat_eip_id == "" ? join(", ", aws_eip.nat.*.id) : var.nat_eip_id
   tags          = var.tags
 }
 
