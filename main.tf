@@ -78,6 +78,10 @@ resource "aws_route_table_association" "this" {
 }
 
 resource "aws_network_acl" "this" {
+  # checkov:skip=CKV_AWS_229: Allowing ingress traffic on port 21 depends on user
+  # checkov:skip=CKV_AWS_230: Allowing ingress traffic on port 20 depends on user
+  # checkov:skip=CKV_AWS_231: Allowing ingress traffic on port 3389 depends on user
+  # checkov:skip=CKV_AWS_232: Allowing ingress traffic on port 22 depends on user
   vpc_id     = data.aws_vpc.this.id
   subnet_ids = [for _, v in aws_subnet.this : v.id]
 
