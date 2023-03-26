@@ -31,6 +31,7 @@ resource "aws_subnet" "this" {
 resource "aws_route_table" "this" {
   count  = var.create_rtb ? 1 : 0
   vpc_id = data.aws_vpc.this.id
+
   tags = merge({
     Name = var.rtb_name
   }, var.tags)
@@ -45,16 +46,22 @@ resource "aws_route" "igw" {
 
 resource "aws_eip" "nat" {
   # checkov:skip=CKV2_AWS_19: EIP is associated with NAT gateway
-  count = var.create_rtb && var.create_nat ? 1 : 0
+  count = var.create_nat && var.nat_eip_id == "" ? 1 : 0
   vpc   = true
-  tags  = var.tags
+
+  tags = merge({
+    Name = "${var.subnet_name}-nat-eip"
+  }, var.tags)
 }
 
 resource "aws_nat_gateway" "this" {
-  count         = var.create_rtb && var.create_nat ? 1 : 0
+  count         = var.create_nat ? 1 : 0
   subnet_id     = var.natgw_subnet_id
-  allocation_id = join(", ", aws_eip.nat.*.id)
-  tags          = var.tags
+  allocation_id = var.nat_eip_id == "" ? join(", ", aws_eip.nat.*.id) : var.nat_eip_id
+
+  tags = merge({
+    Name = "${var.subnet_name}-nat"
+  }, var.tags)
 }
 
 resource "aws_route" "ngw" {
@@ -71,6 +78,10 @@ resource "aws_route_table_association" "this" {
 }
 
 resource "aws_network_acl" "this" {
+  # checkov:skip=CKV_AWS_229: Allowing ingress traffic on port 21 depends on user
+  # checkov:skip=CKV_AWS_230: Allowing ingress traffic on port 20 depends on user
+  # checkov:skip=CKV_AWS_231: Allowing ingress traffic on port 3389 depends on user
+  # checkov:skip=CKV_AWS_232: Allowing ingress traffic on port 22 depends on user
   vpc_id     = data.aws_vpc.this.id
   subnet_ids = [for _, v in aws_subnet.this : v.id]
 
